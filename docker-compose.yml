@@ -1,0 +1,427 @@
+networks:
+  cropdeal-net:
+    driver: bridge
+
+services:
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: cropdeal-rabbitmq
+    restart: always
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    networks:
+      - cropdeal-net
+
+  config-server:
+    build: ./config-server
+    container_name: cropdeal-config-server
+    restart: on-failure
+    ports:
+      - "8888:8888"
+    environment:
+      - SERVER_PORT=8888
+      - JAVA_TOOL_OPTIONS=-Xms64m -Xmx140m -XX:+TieredCompilation -XX:TieredStopAtLevel=1
+    networks:
+      - cropdeal-net
+
+  eureka-server:
+    build: ./eureka-server
+    container_name: cropdeal-eureka-server
+    restart: on-failure
+    ports:
+      - "8761:8761"
+    environment:
+      - CONFIG_SERVER_URL=http://config-server:8888
+      - SERVER_PORT=8761
+      - EUREKA_CLIENT_REGISTER_WITH_EUREKA=false
+      - EUREKA_CLIENT_FETCH_REGISTRY=false
+      - JAVA_TOOL_OPTIONS=-Xms64m -Xmx140m -XX:+TieredCompilation -XX:TieredStopAtLevel=1
+    networks:
+      - cropdeal-net
+
+  api-gateway:
+    build: ./api-gateway
+    container_name: cropdeal-api-gateway
+    restart: on-failure
+    ports:
+      - "8080:8080"
+    environment:
+      - CONFIG_SERVER_URL=http://config-server:8888
+      - SERVER_PORT=8080
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
+      - AUTH_SERVICE_URI=http://auth-service:8081
+      - USER_SERVICE_URI=http://user-service:8082
+      - CROP_SERVICE_URI=http://crop-service:8083
+      - PRICE_SERVICE_URI=http://price-service:8084
+      - NEGOTIATION_SERVICE_URI=http://negotiation-service:8085
+      - BIDDING_SERVICE_URI=http://bidding-service:8086
+      - WALLET_SERVICE_URI=http://wallet-service:8087
+      - ORDER_SERVICE_URI=http://order-service:8088
+      - PAYMENT_SERVICE_URI=http://payment-service:8089
+      - INVOICE_SERVICE_URI=http://invoice-service:8090
+      - DELIVERY_SERVICE_URI=http://delivery-service:8091
+      - NOTIFICATION_SERVICE_URI=http://notification-service:8092
+      - CHATBOT_SERVICE_URI=http://chatbot-service:8096
+      - PRICE_ALERT_SERVICE_URI=http://price-alert-service:8094
+      - REPORT_SERVICE_URI=http://report-service:8095
+      - SPRING_RABBITMQ_HOST=rabbitmq
+      - JAVA_TOOL_OPTIONS=-Xms64m -Xmx140m -XX:+TieredCompilation -XX:TieredStopAtLevel=1
+    depends_on:
+      - config-server
+      - eureka-server
+      - rabbitmq
+    networks:
+      - cropdeal-net
+
+  auth-service:
+    build: ./auth-service
+    container_name: cropdeal-auth-service
+    restart: on-failure
+    ports:
+      - "8081:8081"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    environment:
+      - CONFIG_SERVER_URL=http://config-server:8888
+      - SPRING_DATASOURCE_URL=jdbc:mysql://host.docker.internal:3306/cropdeal_auth_db?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      - SPRING_DATASOURCE_USERNAME=mohan
+      - SPRING_DATASOURCE_PASSWORD=Mohan@2004
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
+      - USER_SERVICE_URL=http://user-service:8082
+      - PRICE_ALERT_SERVICE_URL=http://price-alert-service:8094
+      - FACEBOOK_CLIENT_ID=1863281271349686
+      - FACEBOOK_CLIENT_SECRET=acfb65e4f1bee5e87db8211932ff1616
+      - JAVA_TOOL_OPTIONS=-Xms64m -Xmx140m -XX:+TieredCompilation -XX:TieredStopAtLevel=1
+    depends_on:
+      - config-server
+      - eureka-server
+    networks:
+      - cropdeal-net
+
+  user-service:
+    build: ./user-sevice
+    container_name: cropdeal-user-service
+    restart: on-failure
+    ports:
+      - "8082:8082"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    environment:
+      - CONFIG_SERVER_URL=http://config-server:8888
+      - SPRING_DATASOURCE_URL=jdbc:mysql://host.docker.internal:3306/cropdeal_user_db?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      - SPRING_DATASOURCE_USERNAME=mohan
+      - SPRING_DATASOURCE_PASSWORD=Mohan@2004
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
+      - JAVA_TOOL_OPTIONS=-Xms64m -Xmx140m -XX:+TieredCompilation -XX:TieredStopAtLevel=1
+    depends_on:
+      - config-server
+      - eureka-server
+    networks:
+      - cropdeal-net
+
+  crop-service:
+    build: ./crop-service
+    container_name: cropdeal-crop-service
+    restart: on-failure
+    ports:
+      - "8083:8083"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    environment:
+      - CONFIG_SERVER_URL=http://config-server:8888
+      - SPRING_DATASOURCE_URL=jdbc:mysql://host.docker.internal:3306/cropdeal_crop_db?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      - SPRING_DATASOURCE_USERNAME=mohan
+      - SPRING_DATASOURCE_PASSWORD=Mohan@2004
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
+      - USER_SERVICE_URL=http://user-service:8082
+      - CROP_SERVICE_PRICE_ALERT_SERVICE_URL=http://price-alert-service:8094
+      - JAVA_TOOL_OPTIONS=-Xms64m -Xmx140m -XX:+TieredCompilation -XX:TieredStopAtLevel=1
+    depends_on:
+      - config-server
+      - eureka-server
+    networks:
+      - cropdeal-net
+
+  price-service:
+    build: ./price-service
+    container_name: cropdeal-price-service
+    restart: on-failure
+    ports:
+      - "8084:8084"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    environment:
+      - CONFIG_SERVER_URL=http://config-server:8888
+      - SPRING_DATASOURCE_URL=jdbc:mysql://host.docker.internal:3306/cropdeal_price_db?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Kolkata
+      - SPRING_DATASOURCE_USERNAME=mohan
+      - SPRING_DATASOURCE_PASSWORD=Mohan@2004
+      - GOVERNMENT_API_SYNC_ON_STARTUP=false
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
+      - TZ=Asia/Kolkata
+      - JAVA_TOOL_OPTIONS=-Xms64m -Xmx140m -XX:+TieredCompilation -XX:TieredStopAtLevel=1 -Duser.timezone=Asia/Kolkata
+    depends_on:
+      - config-server
+      - eureka-server
+    networks:
+      - cropdeal-net
+
+  negotiation-service:
+    build: ./negotiation-service
+    container_name: cropdeal-negotiation-service
+    restart: on-failure
+    ports:
+      - "8085:8085"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    environment:
+      - CONFIG_SERVER_URL=http://config-server:8888
+      - SPRING_DATASOURCE_URL=jdbc:mysql://host.docker.internal:3306/cropdeal_negotiation_db?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      - SPRING_DATASOURCE_USERNAME=mohan
+      - SPRING_DATASOURCE_PASSWORD=Mohan@2004
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
+      - JAVA_TOOL_OPTIONS=-Xms64m -Xmx140m -XX:+TieredCompilation -XX:TieredStopAtLevel=1
+    depends_on:
+      - config-server
+      - eureka-server
+    networks:
+      - cropdeal-net
+
+  bidding-service:
+    build: ./bidding-service
+    container_name: cropdeal-bidding-service
+    restart: on-failure
+    ports:
+      - "8086:8086"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    environment:
+      - CONFIG_SERVER_URL=http://config-server:8888
+      - SPRING_DATASOURCE_URL=jdbc:mysql://host.docker.internal:3306/cropdeal_bidding_db?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      - SPRING_DATASOURCE_USERNAME=mohan
+      - SPRING_DATASOURCE_PASSWORD=Mohan@2004
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
+      - WALLET_SERVICE_URL=http://wallet-service:8087
+      - ORDER_SERVICE_URL=http://order-service:8088
+      - JAVA_TOOL_OPTIONS=-Xms64m -Xmx140m -XX:+TieredCompilation -XX:TieredStopAtLevel=1
+    depends_on:
+      - config-server
+      - eureka-server
+    networks:
+      - cropdeal-net
+
+  wallet-service:
+    build: ./wallet-service
+    container_name: cropdeal-wallet-service
+    restart: on-failure
+    ports:
+      - "8087:8087"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    environment:
+      - CONFIG_SERVER_URL=http://config-server:8888
+      - SPRING_DATASOURCE_URL=jdbc:mysql://host.docker.internal:3306/cropdeal_wallet_db?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      - SPRING_DATASOURCE_USERNAME=mohan
+      - SPRING_DATASOURCE_PASSWORD=Mohan@2004
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
+      - JAVA_TOOL_OPTIONS=-Xms64m -Xmx140m -XX:+TieredCompilation -XX:TieredStopAtLevel=1
+    depends_on:
+      - config-server
+      - eureka-server
+    networks:
+      - cropdeal-net
+
+  order-service:
+    build: ./order-service
+    container_name: cropdeal-order-service
+    restart: on-failure
+    ports:
+      - "8088:8088"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    environment:
+      - CONFIG_SERVER_URL=http://config-server:8888
+      - SPRING_DATASOURCE_URL=jdbc:mysql://host.docker.internal:3306/cropdeal_order_db?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      - SPRING_DATASOURCE_USERNAME=mohan
+      - SPRING_DATASOURCE_PASSWORD=Mohan@2004
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
+      - PAYMENT_SERVICE_URL=http://payment-service:8089
+      - INVOICE_SERVICE_URL=http://invoice-service:8090
+      - DELIVERY_SERVICE_URL=http://delivery-service:8091
+      - NOTIFICATION_SERVICE_URL=http://notification-service:8092
+      - JAVA_TOOL_OPTIONS=-Xms64m -Xmx140m -XX:+TieredCompilation -XX:TieredStopAtLevel=1
+    depends_on:
+      - config-server
+      - eureka-server
+    networks:
+      - cropdeal-net
+
+  payment-service:
+    build: ./payment-service
+    container_name: cropdeal-payment-service
+    restart: on-failure
+    ports:
+      - "8089:8089"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    environment:
+      - CONFIG_SERVER_URL=http://config-server:8888
+      - SPRING_DATASOURCE_URL=jdbc:mysql://host.docker.internal:3306/cropdeal_payment_db?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      - SPRING_DATASOURCE_USERNAME=mohan
+      - SPRING_DATASOURCE_PASSWORD=Mohan@2004
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
+      - ORDER_SERVICE_URL=http://order-service:8088
+      - INVOICE_SERVICE_URL=http://invoice-service:8090
+      - JAVA_TOOL_OPTIONS=-Xms64m -Xmx140m -XX:+TieredCompilation -XX:TieredStopAtLevel=1
+    depends_on:
+      - config-server
+      - eureka-server
+    networks:
+      - cropdeal-net
+
+  invoice-service:
+    build: ./invoice-service
+    container_name: cropdeal-invoice-service
+    restart: on-failure
+    ports:
+      - "8090:8090"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    environment:
+      - CONFIG_SERVER_URL=http://config-server:8888
+      - SPRING_DATASOURCE_URL=jdbc:mysql://host.docker.internal:3306/cropdeal_invoice_db?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      - SPRING_DATASOURCE_USERNAME=mohan
+      - SPRING_DATASOURCE_PASSWORD=Mohan@2004
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
+      - ORDER_SERVICE_URL=http://order-service:8088
+      - JAVA_TOOL_OPTIONS=-Xms64m -Xmx140m -XX:+TieredCompilation -XX:TieredStopAtLevel=1
+    depends_on:
+      - config-server
+      - eureka-server
+    networks:
+      - cropdeal-net
+
+  delivery-service:
+    build: ./deliveryservice
+    container_name: cropdeal-delivery-service
+    restart: on-failure
+    ports:
+      - "8091:8091"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    environment:
+      - CONFIG_SERVER_URL=http://config-server:8888
+      - SPRING_DATASOURCE_URL=jdbc:mysql://host.docker.internal:3306/cropdeal_delivery_db?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      - SPRING_DATASOURCE_USERNAME=mohan
+      - SPRING_DATASOURCE_PASSWORD=Mohan@2004
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
+      - ORDER_SERVICE_URL=http://order-service:8088
+      - NOTIFICATION_SERVICE_URL=http://notification-service:8092
+      - JAVA_TOOL_OPTIONS=-Xms64m -Xmx140m -XX:+TieredCompilation -XX:TieredStopAtLevel=1
+    depends_on:
+      - config-server
+      - eureka-server
+    networks:
+      - cropdeal-net
+
+  notification-service:
+    build: ./notification-service
+    container_name: cropdeal-notification-service
+    restart: on-failure
+    ports:
+      - "8092:8092"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    environment:
+      - CONFIG_SERVER_URL=http://config-server:8888
+      - SPRING_DATASOURCE_URL=jdbc:mysql://host.docker.internal:3306/cropdeal_notification_db?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      - SPRING_DATASOURCE_USERNAME=mohan
+      - SPRING_DATASOURCE_PASSWORD=Mohan@2004
+      - SPRING_RABBITMQ_HOST=rabbitmq
+      - PRICE_SERVICE_URL=http://price-service:8084
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
+      - JAVA_TOOL_OPTIONS=-Xms64m -Xmx140m -XX:+TieredCompilation -XX:TieredStopAtLevel=1
+    depends_on:
+      - config-server
+      - rabbitmq
+      - eureka-server
+    networks:
+      - cropdeal-net
+
+  chatbot-service:
+    build: ./chatbot-service
+    container_name: cropdeal-chatbot-service
+    restart: on-failure
+    ports:
+      - "8096:8096"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    environment:
+      - CONFIG_SERVER_URL=http://config-server:8888
+      - SPRING_DATASOURCE_URL=jdbc:mysql://host.docker.internal:3306/cropdeal_crop_db?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Kolkata
+      - SPRING_DATASOURCE_USERNAME=mohan
+      - SPRING_DATASOURCE_PASSWORD=Mohan@2004
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
+      - CROP_SERVICE_URL=http://crop-service:8083
+      - PRICE_SERVICE_URL=http://price-service:8084
+      - ORDER_SERVICE_URL=http://order-service:8088
+      - DELIVERY_SERVICE_URL=http://delivery-service:8091
+      - AUTH_SERVICE_URL=http://auth-service:8081
+      - USER_SERVICE_URL=http://user-service:8082
+      - JAVA_TOOL_OPTIONS=-Xms64m -Xmx140m -XX:+TieredCompilation -XX:TieredStopAtLevel=1
+    depends_on:
+      - config-server
+      - eureka-server
+    networks:
+      - cropdeal-net
+
+  price-alert-service:
+    build: ./price-alert-service
+    container_name: cropdeal-price-alert-service
+    restart: on-failure
+    ports:
+      - "8094:8094"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    environment:
+      - CONFIG_SERVER_URL=http://config-server:8888
+      - SPRING_DATASOURCE_URL=jdbc:mysql://host.docker.internal:3306/cropdeal_price_alert_db?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      - SPRING_DATASOURCE_USERNAME=mohan
+      - SPRING_DATASOURCE_PASSWORD=Mohan@2004
+      - SPRING_RABBITMQ_HOST=rabbitmq
+      - PRICE_SERVICE_URL=http://price-service:8084
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
+      - JAVA_TOOL_OPTIONS=-Xms64m -Xmx140m -XX:+TieredCompilation -XX:TieredStopAtLevel=1
+    depends_on:
+      - config-server
+      - rabbitmq
+      - eureka-server
+    networks:
+      - cropdeal-net
+
+  report-service:
+    build: ./report-service
+    container_name: cropdeal-report-service
+    restart: on-failure
+    ports:
+      - "8095:8095"
+    environment:
+      - CONFIG_SERVER_URL=http://config-server:8888
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
+      - JAVA_TOOL_OPTIONS=-Xms64m -Xmx140m -XX:+TieredCompilation -XX:TieredStopAtLevel=1
+    depends_on:
+      - config-server
+      - eureka-server
+    networks:
+      - cropdeal-net
+
+  cropdeal-ui:
+    build: ./cropdeal-ui
+    container_name: cropdeal-ui
+    restart: on-failure
+    ports:
+      - "4200:80"
+    depends_on:
+      - api-gateway
+    networks:
+      - cropdeal-net

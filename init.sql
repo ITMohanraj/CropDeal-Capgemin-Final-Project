@@ -1,0 +1,19 @@
+CREATE DATABASE IF NOT EXISTS cropdeal_auth_db;
+CREATE DATABASE IF NOT EXISTS cropdeal_user_db;
+CREATE DATABASE IF NOT EXISTS cropdeal_crop_db;
+CREATE DATABASE IF NOT EXISTS cropdeal_price_db;
+CREATE DATABASE IF NOT EXISTS cropdeal_negotiation_db;
+CREATE DATABASE IF NOT EXISTS cropdeal_bidding_db;
+CREATE DATABASE IF NOT EXISTS cropdeal_wallet_db;
+CREATE DATABASE IF NOT EXISTS cropdeal_order_db;
+CREATE DATABASE IF NOT EXISTS cropdeal_payment_db;
+CREATE DATABASE IF NOT EXISTS cropdeal_invoice_db;
+CREATE DATABASE IF NOT EXISTS cropdeal_delivery_db;
+CREATE DATABASE IF NOT EXISTS cropdeal_notification_db;
+CREATE DATABASE IF NOT EXISTS cropdeal_price_alert_db;
+
+CREATE USER IF NOT EXISTS 'mohan'@'%' IDENTIFIED BY 'Mohan@2004';
+GRANT ALL PRIVILEGES ON *.* TO 'mohan'@'%' WITH GRANT OPTION;
+CREATE USER IF NOT EXISTS 'mohan'@'localhost' IDENTIFIED BY 'Mohan@2004';
+GRANT ALL PRIVILEGES ON *.* TO 'mohan'@'localhost' WITH GRANT OPTION;
+FLUSH PRIVILEGES;

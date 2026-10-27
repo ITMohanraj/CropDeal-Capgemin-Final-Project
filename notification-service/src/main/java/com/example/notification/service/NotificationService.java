@@ -1,0 +1,31 @@
+package com.example.notification.service;
+
+import com.example.notification.dto.NotificationRequest;
+import com.example.notification.dto.NotificationResponse;
+
+import java.util.List;
+
+public interface NotificationService {
+
+    NotificationResponse sendNotification(NotificationRequest request);
+
+    NotificationResponse sendOtp(String phoneNumber, String otp);
+
+    NotificationResponse sendDeliveryCompletedNotification(String phoneNumber, Long orderId);
+
+    NotificationResponse getNotification(Long notificationId);
+
+    List<NotificationResponse> getNotificationsByRecipient(String recipient);
+
+    List<NotificationResponse> getNotificationsByUser(String userId);
+
+    List<NotificationResponse> getNotificationsByOrder(Long orderId);
+
+    void markAsRead(Long notificationId);
+
+    void markAllAsRead(String userId);
+
+    void deleteNotification(Long notificationId);
+
+    void clearAllNotifications(String userId);
+}
