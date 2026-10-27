@@ -34,28 +34,28 @@ CropDeal adheres to the **Database-per-Service** architectural pattern, guarante
 
 ```mermaid
 flowchart TD
-    subgraph Client_Layer [Client Layer]
-        UI["Angular 18+ Web Client<br/>(Port 4200)<br/>• Role-Based Dashboards • Glassmorphism UI<br/>• Indian Geo-Hierarchy • 5-Stage Live Tracking"]
+    subgraph Client_Layer ["Client Layer"]
+        UI["Angular 18+ Web Client (Port 4200)<br/>Role-Based Dashboards • Glassmorphism UI<br/>Indian Geo-Hierarchy • 5-Stage Live Tracking"]
     end
 
-    subgraph Gateway_Mesh [API Gateway & Discovery Mesh]
-        EUREKA["Netflix Eureka Registry<br/>(Port 8761)<br/>Dynamic Service Discovery"]
-        CONFIG["Spring Cloud Config Server<br/>(Port 8888)<br/>Centralized Properties"]
-        GATEWAY["Spring Cloud API Gateway<br/>(Port 8080)<br/>Reverse Proxy • JWT Filter • CORS Policy • Swagger Aggregator"]
+    subgraph Gateway_Mesh ["API Gateway & Discovery Mesh"]
+        EUREKA["Netflix Eureka Registry (Port 8761)<br/>Dynamic Service Discovery"]
+        CONFIG["Spring Cloud Config Server (Port 8888)<br/>Centralized Properties"]
+        GATEWAY["Spring Cloud API Gateway (Port 8080)<br/>Reverse Proxy • JWT Filter • CORS Policy • Swagger Aggregator"]
     end
 
-    subgraph Event_Bus [Asynchronous Event Bus & Distributed SAGA]
-        RABBIT["RabbitMQ Message Broker<br/>(Port 5672 / Web UI: 15672)<br/>• notification.exchange • cropdeal.notification.queue<br/>• cropdeal.price-alert.queue • Async Event Pipeline"]
-        SAGA["SAGA Orchestrator (order-service)<br/>• Atomic Multi-Service Coordination<br/>• Inventory Deductions • Wallet Escrow Holds • Compensating Rollbacks"]
+    subgraph Event_Bus ["Asynchronous Event Bus & Distributed SAGA"]
+        RABBIT["RabbitMQ Message Broker (Port 5672 / 15672)<br/>notification.exchange • cropdeal.notification.queue<br/>cropdeal.price-alert.queue • Async Event Pipeline"]
+        SAGA["SAGA Orchestrator - order-service<br/>Atomic Multi-Service Coordination<br/>Inventory Deductions • Wallet Escrow Holds • Compensating Rollbacks"]
     end
 
-    subgraph Domain_Microservices [Domain Microservices Cluster (Java 21 + Spring Boot 3.3.13)]
+    subgraph Domain_Microservices ["Domain Microservices Cluster"]
         AUTH["auth-service (8081)<br/>JWT • BCrypt • SMTP OTP"]
         USER["user-service (8082)<br/>Profiles • KYC • Verification"]
-        CROP["crop-service [CQRS] (8083)<br/>Cloudinary CDN • Produce Catalog"]
+        CROP["crop-service CQRS (8083)<br/>Cloudinary CDN • Produce Catalog"]
         PRICE["price-service (8084)<br/>17,800+ APMC Mandi Benchmarks"]
         NEG["negotiation-service (8085)<br/>Direct Price Bargaining Engine"]
-        BID["bidding-service [CQRS] (8086)<br/>Auction Floor • Auto-Expiry"]
+        BID["bidding-service CQRS (8086)<br/>Auction Floor • Auto-Expiry"]
         WALLET["wallet-service (8087)<br/>Optimistic Lock Escrow Wallet"]
         ORDER["order-service (8088)<br/>SAGA Orchestrator • Resilience4j"]
         PAY["payment-service (8089)<br/>Payment Processing & Audit"]
@@ -67,16 +67,15 @@ flowchart TD
         CHAT["chatbot-service (8096)<br/>Sarvam AI Agricultural LLM"]
     end
 
-    subgraph External_Services [External Cloud & AI Integrations]
-        DATA_GOV["Govt. of India Mandi API<br/>(data.gov.in / AGMARKNET)"]
+    subgraph External_Services ["External Cloud & AI Integrations"]
+        DATA_GOV["Govt. of India Mandi API<br/>data.gov.in / AGMARKNET"]
         SARVAM["Sarvam AI Agricultural LLM"]
         CLOUDINARY["Cloudinary Media Cloud & CDN"]
-        SMTP["Gmail SMTP Server<br/>(Secure OTP Verification)"]
+        SMTP["Gmail SMTP Server<br/>Secure OTP Verification"]
     end
 
     UI -->|REST / JSON| GATEWAY
     GATEWAY --> EUREKA
-    Domain_Microservices --> EUREKA
     GATEWAY --> Domain_Microservices
 
     CROP -->|Stream Produce Photos| CLOUDINARY
@@ -132,7 +131,7 @@ The ordering domain orchestrates multi-service distributed transactions without 
 
 ### 6. 🚚 5-Stage Live Logistics Tracking
 - Interactive milestone stepper:
-  $$\text{Placed} \longrightarrow \text{Assigned} \longrightarrow \text{Picked Up} \longrightarrow \text{In Transit} \longrightarrow \text{Delivered}$$
+  > **Order Placed** ➔ **Agent Assigned** ➔ **Produce Picked Up** ➔ **In Transit** ➔ **Delivered (OTP Verified)**
 - Delivery agent assignment tracking, waybill generator, OTP-verified handover, and live status history.
 
 ---
