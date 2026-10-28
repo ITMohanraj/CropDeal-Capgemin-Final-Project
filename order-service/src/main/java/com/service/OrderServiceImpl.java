@@ -8,6 +8,7 @@ import com.exception.OrderNotFoundException;
 import com.repository.OrderRepository;
 import feign.FeignException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.client.InvoiceServiceClient;
@@ -44,7 +45,28 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
+    @Transactional(propagation = Propagation.NOT_SUPPORTED)
     public OrderResponse createOrder(CreateOrderRequest request) {
+
+        // 1. Idempotency check: prevent duplicate order submissions by transactionId
+        if (request.getTransactionId() != null && !request.getTransactionId().isBlank()) {
+            java.util.Optional<Order> existing = orderRepository.findByTransactionId(request.getTransactionId());
+            if (existing.isPresent()) {
+                return convertToResponse(existing.get());
+            }
+        }
+
+        // 2. Debounce duplicate rapid submissions for same dealer, crop, and quantity within 5 seconds
+        if (request.getDealerId() != null && request.getCropId() != null) {
+            java.util.Optional<Order> duplicate = orderRepository.findFirstByDealerIdAndCropIdAndQuantityAndStatusNotOrderByCreatedAtDesc(
+                    request.getDealerId(), request.getCropId(), request.getQuantity(), OrderStatus.CANCELLED);
+            if (duplicate.isPresent()) {
+                Order recent = duplicate.get();
+                if (recent.getCreatedAt() != null && recent.getCreatedAt().isAfter(java.time.LocalDateTime.now().minusSeconds(5))) {
+                    return convertToResponse(recent);
+                }
+            }
+        }
 
         Order order = new Order();
 
@@ -67,10 +89,17 @@ public class OrderServiceImpl implements OrderService {
 
         order.setTotalAmount(totalAmount);
 
+        // 3. Execute Distributed Saga Pattern (Crop stock reserve -> Payment execution -> Event publishing)
+        if (sagaOrchestrator != null) {
+            order.setStatus(OrderStatus.CREATED);
+            Order savedOrder = orderRepository.saveAndFlush(order);
+            Order finalizedOrder = sagaOrchestrator.executeOrderSaga(savedOrder);
+            return convertToResponse(finalizedOrder);
+        }
+
+        // Fallback if orchestrator bean is absent
         order.setStatus(OrderStatus.PAID);
-
         Order savedOrder = orderRepository.save(order);
-
         if (eventPublisher != null) {
             try {
                 eventPublisher.publishOrderPlacedEvent(

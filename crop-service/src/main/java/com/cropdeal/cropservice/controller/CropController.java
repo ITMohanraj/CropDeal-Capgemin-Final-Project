@@ -87,10 +87,20 @@ public class CropController {
      * Internal purchase callback for Order/Deal Service.
      * Reduces available quantity atomically. When it reaches zero the crop becomes SOLD_OUT.
      */
-    @PatchMapping("/{id}/quantity")
+    @RequestMapping(value = "/{id}/quantity", method = {RequestMethod.PATCH, RequestMethod.PUT, RequestMethod.POST})
     public CropResponse reduceQuantity(@PathVariable @Positive Long id,
                                        @Valid @RequestBody QuantityUpdateRequest request) {
         return cropService.reduceQuantity(id, request.getPurchasedQuantity());
+    }
+
+    /**
+     * Compensating rollback endpoint for Order Saga.
+     * Restores crop stock atomically if an order transaction is rolled back.
+     */
+    @RequestMapping(value = "/{id}/restore-quantity", method = {RequestMethod.PATCH, RequestMethod.PUT, RequestMethod.POST})
+    public CropResponse restoreQuantity(@PathVariable @Positive Long id,
+                                        @Valid @RequestBody QuantityUpdateRequest request) {
+        return cropService.restoreQuantity(id, request.getPurchasedQuantity());
     }
 
     @DeleteMapping("/{id}")

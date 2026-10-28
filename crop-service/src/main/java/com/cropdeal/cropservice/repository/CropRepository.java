@@ -39,4 +39,15 @@ public interface CropRepository extends JpaRepository<Crop, Long> {
         """)
     int reduceQuantity(@Param("cropId") Long cropId,
                        @Param("purchasedQuantity") BigDecimal purchasedQuantity);
+
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query("""
+        UPDATE Crop c
+           SET c.quantity = c.quantity + :restoredQuantity,
+               c.status = 'PUBLISHED',
+               c.updatedAt = CURRENT_TIMESTAMP
+         WHERE c.id = :cropId
+        """)
+    int restoreQuantity(@Param("cropId") Long cropId,
+                        @Param("restoredQuantity") BigDecimal restoredQuantity);
 }

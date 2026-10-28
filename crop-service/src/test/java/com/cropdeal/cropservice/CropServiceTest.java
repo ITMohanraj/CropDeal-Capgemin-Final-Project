@@ -31,7 +31,16 @@ class CropServiceTest {
     @Mock SubscriptionService subscriptionService;
     @Mock com.cropdeal.cropservice.client.PriceAlertClient priceAlertClient;
 
-    @InjectMocks CropService cropService;
+    CropService cropService;
+
+    @org.junit.jupiter.api.BeforeEach
+    void setUp() {
+        com.cropdeal.cropservice.command.CropCommandService commandService =
+                new com.cropdeal.cropservice.command.CropCommandService(cropRepository, priceServiceClient, subscriptionService, priceAlertClient);
+        com.cropdeal.cropservice.query.CropQueryService queryService =
+                new com.cropdeal.cropservice.query.CropQueryService(cropRepository);
+        cropService = new CropService(commandService, queryService);
+    }
 
     @Test
     void create_allowsPriceAtOrBelowMandiMaximum() {
@@ -80,6 +89,22 @@ class CropServiceTest {
 
         assertThrows(InsufficientQuantityException.class,
                 () -> cropService.reduceQuantity(1L, new BigDecimal("150")));
+    }
+
+    @Test
+    void restoreQuantity_restoresStockSuccessfully() {
+        Crop crop = publishedCrop("50");
+        when(cropRepository.restoreQuantity(eq(1L), eq(new BigDecimal("50")))).thenAnswer(inv -> {
+            crop.setQuantity(new BigDecimal("100"));
+            crop.setStatus(Crop.PUBLISHED);
+            return 1;
+        });
+        when(cropRepository.findById(1L)).thenReturn(Optional.of(crop));
+
+        var response = cropService.restoreQuantity(1L, new BigDecimal("50"));
+
+        assertEquals("PUBLISHED", response.status());
+        assertEquals(new BigDecimal("100"), response.quantity());
     }
 
     @Test

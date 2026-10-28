@@ -7,7 +7,6 @@ import java.math.BigDecimal;
 
 public class RefundRequest {
 
-    @NotNull
     private Long deliveryId;
 
     @NotNull

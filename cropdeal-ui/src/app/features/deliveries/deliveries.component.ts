@@ -824,18 +824,8 @@ export class DeliveriesComponent implements OnInit {
 
   ngOnInit(): void {
     if (typeof localStorage !== 'undefined') {
-      const raw = localStorage.getItem('cropdeal_active_deliveries');
-      if (raw) {
-        try {
-          const list = JSON.parse(raw);
-          if (Array.isArray(list)) {
-            const filtered = list.filter(d => !this.isSelfPickup(d));
-            if (filtered.length !== list.length) {
-              localStorage.setItem('cropdeal_active_deliveries', JSON.stringify(filtered));
-            }
-          }
-        } catch {}
-      }
+      localStorage.removeItem('cropdeal_active_deliveries');
+      localStorage.removeItem('cropdeal_deliveries');
     }
 
     this.authService.currentUser$.subscribe((u: User | null) => {

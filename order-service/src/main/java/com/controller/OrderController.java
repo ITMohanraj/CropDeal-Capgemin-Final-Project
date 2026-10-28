@@ -22,9 +22,23 @@ import java.util.List;
 public class OrderController {
 
     private final OrderService orderService;
+    private final com.service.OrderSagaOrchestrator sagaOrchestrator;
 
-    public OrderController(OrderService orderService) {
+    public OrderController(
+            OrderService orderService,
+            @org.springframework.beans.factory.annotation.Autowired(required = false) com.service.OrderSagaOrchestrator sagaOrchestrator) {
         this.orderService = orderService;
+        this.sagaOrchestrator = sagaOrchestrator;
+    }
+
+    @GetMapping("/saga/{orderId}")
+    public ResponseEntity<?> getSagaDetails(@PathVariable Long orderId) {
+        if (sagaOrchestrator != null) {
+            return sagaOrchestrator.getSagaDetails(orderId)
+                    .map(ResponseEntity::ok)
+                    .orElse(ResponseEntity.notFound().build());
+        }
+        return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body("Saga orchestrator not available");
     }
 
     @PostMapping

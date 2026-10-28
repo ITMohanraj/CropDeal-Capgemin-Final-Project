@@ -969,6 +969,12 @@ export class DashboardComponent implements OnInit {
 
         // 3. Delivery Partner Dynamic Metrics
         if (u.role === 'DELIVERY_PARTNER') {
+          this.availablePickupsCount = 0;
+          this.myDeliveriesCount = 0;
+          this.ongoingDeliveriesCount = 0;
+          this.completedDeliveriesCount = 0;
+          this.totalEarnings = 0;
+          this.deliveryService.refreshFromBackend();
           this.deliveryService.deliveries$.subscribe((deliveries: any[]) => {
             const isSelf = (d: any) => {
               if (!d) return false;

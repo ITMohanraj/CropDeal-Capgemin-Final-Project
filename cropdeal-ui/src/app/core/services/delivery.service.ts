@@ -11,16 +11,13 @@ export class DeliveryService {
   private baseUrl = `${environment.apiUrl}/deliveries`;
   private readonly DELIVERIES_KEY = 'cropdeal_active_deliveries';
 
-  private deliveriesSubject = new BehaviorSubject<Delivery[]>(this.loadStoredDeliveries());
+  private deliveriesSubject = new BehaviorSubject<Delivery[]>([]);
   public deliveries$ = this.deliveriesSubject.asObservable();
 
   constructor(private http: HttpClient) {
-    if (typeof window !== 'undefined') {
-      window.addEventListener('storage', (e: StorageEvent) => {
-        if (e.key === this.DELIVERIES_KEY) {
-          this.refreshDeliveries();
-        }
-      });
+    if (typeof localStorage !== 'undefined') {
+      localStorage.removeItem(this.DELIVERIES_KEY);
+      localStorage.removeItem('cropdeal_deliveries');
     }
     this.refreshFromBackend();
   }
@@ -39,8 +36,7 @@ export class DeliveryService {
   }
 
   refreshDeliveries(): Delivery[] {
-    const list = this.loadStoredDeliveries();
-    this.deliveriesSubject.next(list);
+    const list = this.deliveriesSubject.value;
     return list;
   }
 
@@ -48,55 +44,38 @@ export class DeliveryService {
     this.http.get<any[]>(this.baseUrl).pipe(
       catchError(() => of([]))
     ).subscribe(serverItems => {
-      if (serverItems && serverItems.length > 0) {
-        const mapped = serverItems
-          .map(d => this.mapBackendDelivery(d))
-          .filter(d => !this.isSelfPickup(d));
-        // Merge with existing
-        const existing = this.loadStoredDeliveries();
-        const merged = [...mapped];
-        existing.forEach(e => {
-          if (!merged.some(m => String(m.id) === String(e.id) || String(m.orderId) === String(e.orderId))) {
-            merged.push(e);
-          }
-        });
-        this.saveDeliveries(merged);
-      }
+      const mapped = (serverItems || [])
+        .map(d => this.mapBackendDelivery(d))
+        .filter(d => !this.isSelfPickup(d));
+      this.saveDeliveries(mapped);
     });
   }
 
   getAllDeliveries(): Observable<Delivery[]> {
     return this.http.get<any[]>(this.baseUrl).pipe(
       map(res => {
-        if (res && res.length > 0) {
-          const mapped = res.map(d => this.mapBackendDelivery(d)).filter(d => !this.isSelfPickup(d));
-          this.saveDeliveries(mapped);
-          return mapped;
-        }
-        return this.deliveriesSubject.value.filter(d => !this.isSelfPickup(d));
+        const mapped = (res || [])
+          .map(d => this.mapBackendDelivery(d))
+          .filter(d => !this.isSelfPickup(d));
+        this.saveDeliveries(mapped);
+        return mapped;
       }),
-      catchError(() => of(this.deliveriesSubject.value.filter(d => !this.isSelfPickup(d))))
+      catchError(() => {
+        this.saveDeliveries([]);
+        return of([]);
+      })
     );
   }
 
   getDeliveryPool(): Observable<Delivery[]> {
     return this.http.get<any[]>(`${this.baseUrl}/pool`).pipe(
       map((res) => {
-        if (res && res.length > 0) {
-          const mapped = res.map(d => this.mapBackendDelivery(d));
-          return mapped.filter(d => !this.isSelfPickup(d));
-        }
-        return this.deliveriesSubject.value.filter(d =>
-          !this.isSelfPickup(d) &&
-          (d.status === 'PENDING_ASSIGNMENT' || d.status === 'AVAILABLE_FOR_PICKUP')
-        );
+        const mapped = (res || [])
+          .map(d => this.mapBackendDelivery(d))
+          .filter(d => !this.isSelfPickup(d));
+        return mapped;
       }),
-      catchError(() => {
-        return of(this.deliveriesSubject.value.filter(d =>
-          !this.isSelfPickup(d) &&
-          (d.status === 'PENDING_ASSIGNMENT' || d.status === 'AVAILABLE_FOR_PICKUP')
-        ));
-      })
+      catchError(() => of([]))
     );
   }
 
@@ -104,20 +83,9 @@ export class DeliveryService {
     const numericId = parseInt(String(partnerId || '').replace(/\D/g, ''), 10) || 3;
     return this.http.get<any[]>(`${this.baseUrl}/agent/${numericId}`).pipe(
       map(res => {
-        if (res && res.length > 0) {
-          return res.map(d => this.mapBackendDelivery(d)).filter(d => !this.isSelfPickup(d));
-        }
-        return this.deliveriesSubject.value.filter(d =>
-          !this.isSelfPickup(d) &&
-          (d.partnerId === partnerId || d.status === 'ASSIGNED' || d.status === 'IN_TRANSIT' || d.status === 'PICKED_UP' || d.status === 'DELIVERED')
-        );
+        return (res || []).map(d => this.mapBackendDelivery(d)).filter(d => !this.isSelfPickup(d));
       }),
-      catchError(() => {
-        return of(this.deliveriesSubject.value.filter(d =>
-          !this.isSelfPickup(d) &&
-          (d.partnerId === partnerId || d.status === 'ASSIGNED' || d.status === 'IN_TRANSIT' || d.status === 'PICKED_UP' || d.status === 'DELIVERED')
-        ));
-      })
+      catchError(() => of([]))
     );
   }
 
@@ -287,7 +255,8 @@ export class DeliveryService {
   private saveDeliveries(list: Delivery[]): void {
     const filtered = (list || []).filter(d => !this.isSelfPickup(d));
     if (typeof localStorage !== 'undefined') {
-      localStorage.setItem(this.DELIVERIES_KEY, JSON.stringify(filtered));
+      localStorage.removeItem(this.DELIVERIES_KEY);
+      localStorage.removeItem('cropdeal_deliveries');
     }
     this.deliveriesSubject.next(filtered);
   }

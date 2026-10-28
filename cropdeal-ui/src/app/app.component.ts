@@ -12,8 +12,9 @@ export class AppComponent implements OnInit {
   title = 'cropdeal-ui';
 
   ngOnInit(): void {
-    const CLEAN_KEY_V15 = 'cropdeal_zero_seed_clean_v15';
-    if (!localStorage.getItem(CLEAN_KEY_V15)) {
+    const CLEAN_KEY_V16 = 'cropdeal_zero_seed_clean_v16';
+    if (!localStorage.getItem(CLEAN_KEY_V16)) {
+      localStorage.removeItem('cropdeal_zero_seed_clean_v15');
       localStorage.removeItem('cropdeal_users_master');
       localStorage.removeItem('cropdeal_farmer_reviews');
       localStorage.removeItem('cropdeal_reviews');
@@ -48,7 +49,12 @@ export class AppComponent implements OnInit {
         }
         keysToRemove.forEach(k => localStorage.removeItem(k));
       } catch {}
-      localStorage.setItem(CLEAN_KEY_V15, 'true');
+      localStorage.setItem(CLEAN_KEY_V16, 'true');
     }
+    // Always unconditionally purge legacy delivery cache
+    try {
+      localStorage.removeItem('cropdeal_active_deliveries');
+      localStorage.removeItem('cropdeal_deliveries');
+    } catch {}
   }
 }

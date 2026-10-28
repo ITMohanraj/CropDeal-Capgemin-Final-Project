@@ -1,6 +1,7 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
+import { Subscription, timer } from 'rxjs';
 import { AuthService } from '../../core/services/auth.service';
 import { AuthModalService } from '../../core/services/auth-modal.service';
 import { NotificationService } from '../../core/services/notification.service';
@@ -866,13 +867,14 @@ import { User } from '../../core/models/user.model';
     }
   `]
 })
-export class HeaderComponent implements OnInit {
+export class HeaderComponent implements OnInit, OnDestroy {
   currentUser: User | null = null;
   showNotifications = false;
   showUserMenu = false;
   showMobileMenu = false;
   unreadCount$ = this.notificationService.unreadCount$;
   notifications$ = this.notificationService.notifications$;
+  private notifPollSub?: Subscription;
 
   constructor(
     private authService: AuthService,
@@ -885,13 +887,28 @@ export class HeaderComponent implements OnInit {
   ngOnInit(): void {
     this.authService.currentUser$.subscribe((user: User | null) => {
       this.currentUser = user;
+      if (this.notifPollSub) {
+        this.notifPollSub.unsubscribe();
+        this.notifPollSub = undefined;
+      }
       if (user && (user.id || user.userId || user.role)) {
-        const uid = user.id || user.userId || user.role;
+        const uid = String(user.id || user.userId || user.role);
+        // Initial fetch
         this.notificationService.getUserNotifications(uid).subscribe();
+        // Background polling every 5 seconds to automatically receive real-time notifications without refreshing
+        this.notifPollSub = timer(5000, 5000).subscribe(() => {
+          this.notificationService.getUserNotifications(uid).subscribe();
+        });
       } else {
         this.notificationService.clearStream();
       }
     });
+  }
+
+  ngOnDestroy(): void {
+    if (this.notifPollSub) {
+      this.notifPollSub.unsubscribe();
+    }
   }
 
   openAuthModal(): void {
@@ -911,6 +928,11 @@ export class HeaderComponent implements OnInit {
     this.showNotifications = !this.showNotifications;
     this.showUserMenu = false;
     this.showMobileMenu = false;
+    // Immediately re-fetch latest notifications when user clicks the notification bell
+    if (this.showNotifications && this.currentUser) {
+      const uid = String(this.currentUser.id || this.currentUser.userId || this.currentUser.role);
+      this.notificationService.getUserNotifications(uid).subscribe();
+    }
   }
 
   toggleUserMenu(): void {
@@ -967,6 +989,10 @@ export class HeaderComponent implements OnInit {
   }
 
   logout(): void {
+    if (this.notifPollSub) {
+      this.notifPollSub.unsubscribe();
+      this.notifPollSub = undefined;
+    }
     this.notificationService.clearStream();
     this.authService.logout();
     this.sidebarService.close();

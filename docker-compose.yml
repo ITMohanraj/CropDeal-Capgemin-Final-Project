@@ -50,21 +50,21 @@ services:
       - CONFIG_SERVER_URL=http://config-server:8888
       - SERVER_PORT=8080
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
-      - AUTH_SERVICE_URI=http://auth-service:8081
-      - USER_SERVICE_URI=http://user-service:8082
-      - CROP_SERVICE_URI=http://crop-service:8083
-      - PRICE_SERVICE_URI=http://price-service:8084
-      - NEGOTIATION_SERVICE_URI=http://negotiation-service:8085
-      - BIDDING_SERVICE_URI=http://bidding-service:8086
-      - WALLET_SERVICE_URI=http://wallet-service:8087
-      - ORDER_SERVICE_URI=http://order-service:8088
-      - PAYMENT_SERVICE_URI=http://payment-service:8089
-      - INVOICE_SERVICE_URI=http://invoice-service:8090
-      - DELIVERY_SERVICE_URI=http://delivery-service:8091
-      - NOTIFICATION_SERVICE_URI=http://notification-service:8092
-      - CHATBOT_SERVICE_URI=http://chatbot-service:8096
-      - PRICE_ALERT_SERVICE_URI=http://price-alert-service:8094
-      - REPORT_SERVICE_URI=http://report-service:8095
+      - AUTH_SERVICE_URI=lb://auth-service
+      - USER_SERVICE_URI=lb://user-service
+      - CROP_SERVICE_URI=lb://crop-service
+      - PRICE_SERVICE_URI=lb://price-service
+      - NEGOTIATION_SERVICE_URI=lb://negotiation-service
+      - BIDDING_SERVICE_URI=lb://bidding-service
+      - WALLET_SERVICE_URI=lb://wallet-service
+      - ORDER_SERVICE_URI=lb://order-service
+      - PAYMENT_SERVICE_URI=lb://payment-service
+      - INVOICE_SERVICE_URI=lb://invoice-service
+      - DELIVERY_SERVICE_URI=lb://deliveryservice
+      - NOTIFICATION_SERVICE_URI=lb://notification-service
+      - CHATBOT_SERVICE_URI=lb://chatbot-service
+      - PRICE_ALERT_SERVICE_URI=lb://price-alert-service
+      - REPORT_SERVICE_URI=lb://report-service
       - SPRING_RABBITMQ_HOST=rabbitmq
       - JAVA_TOOL_OPTIONS=-Xms64m -Xmx140m -XX:+TieredCompilation -XX:TieredStopAtLevel=1
     depends_on:

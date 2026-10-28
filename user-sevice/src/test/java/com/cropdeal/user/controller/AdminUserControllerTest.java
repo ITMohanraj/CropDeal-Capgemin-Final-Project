@@ -63,6 +63,9 @@ class AdminUserControllerTest {
     private AuthServiceClient authServiceClient;
 
     @MockBean
+    private org.springframework.jdbc.core.JdbcTemplate jdbcTemplate;
+
+    @MockBean
     private JwtService jwtService;
 
     @MockBean

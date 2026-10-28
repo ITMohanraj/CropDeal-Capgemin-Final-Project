@@ -39,6 +39,10 @@ public class CropService {
         return commandService.reduceQuantity(cropId, purchasedQuantity);
     }
 
+    public CropResponse restoreQuantity(Long cropId, BigDecimal restoredQuantity) {
+        return commandService.restoreQuantity(cropId, restoredQuantity);
+    }
+
     // Queries
     public List<CropResponse> getAll() {
         return queryService.getAll();

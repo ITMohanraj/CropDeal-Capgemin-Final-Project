@@ -113,6 +113,19 @@ public class CropCommandService {
                 "Insufficient crop quantity. Available quantity: " + formatQuantity(crop.getQuantity()) + " KG");
     }
 
+    public CropResponse restoreQuantity(Long cropId, BigDecimal restoredQuantity) {
+        if (restoredQuantity == null || restoredQuantity.signum() <= 0) {
+            throw new IllegalArgumentException("Restored quantity must be greater than zero");
+        }
+
+        int updated = cropRepository.restoreQuantity(cropId, restoredQuantity);
+        if (updated == 1) {
+            return toResponse(getEntity(cropId));
+        }
+
+        throw new CropNotFoundException("Crop not found with id: " + cropId);
+    }
+
     private Crop getEntity(Long id) {
         return cropRepository.findById(id)
                 .orElseThrow(() -> new CropNotFoundException("Crop not found with id: " + id));
