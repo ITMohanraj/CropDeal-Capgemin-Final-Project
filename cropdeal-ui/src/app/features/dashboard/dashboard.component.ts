@@ -979,13 +979,11 @@ export class DashboardComponent implements OnInit {
             const isSelf = (d: any) => {
               if (!d) return false;
               const f = String(d.fulfillmentType || '').toUpperCase().trim();
-              if (f.includes('SELF') || f.includes('PICKUP')) return true;
+              if (f === 'SELF_PICKUP' || f === 'SELF-PICKUP' || f.includes('SELF_PICKUP') || f.includes('SELF-PICKUP')) return true;
               const s = String(d.status || '').toUpperCase().trim();
-              if (s.includes('SELF') || s.includes('PICKUP')) return true;
+              if (s === 'SELF_PICKUP' || s === 'SELF-PICKUP') return true;
               const drop = String(d.dropAddress || d.deliveryAddress || '').toLowerCase();
               if (drop.includes('self pickup') || drop.includes('self-pickup')) return true;
-              const pick = String(d.pickupAddress || '').toLowerCase();
-              if (pick.includes('self pickup') || pick.includes('self-pickup')) return true;
               return false;
             };
             const validDeliveries = (deliveries || []).filter((d: any) => !isSelf(d));

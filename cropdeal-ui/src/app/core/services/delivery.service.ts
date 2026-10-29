@@ -25,13 +25,11 @@ export class DeliveryService {
   public isSelfPickup(d: any): boolean {
     if (!d) return false;
     const f = String(d.fulfillmentType || '').toUpperCase().trim();
-    if (f.includes('SELF') || f.includes('PICKUP')) return true;
+    if (f === 'SELF_PICKUP' || f === 'SELF-PICKUP' || f.includes('SELF_PICKUP') || f.includes('SELF-PICKUP')) return true;
     const s = String(d.status || '').toUpperCase().trim();
-    if (s.includes('SELF') || s.includes('PICKUP')) return true;
+    if (s === 'SELF_PICKUP' || s === 'SELF-PICKUP') return true;
     const drop = String(d.dropAddress || d.deliveryAddress || '').toLowerCase();
     if (drop.includes('self pickup') || drop.includes('self-pickup')) return true;
-    const pick = String(d.pickupAddress || '').toLowerCase();
-    if (pick.includes('self pickup') || pick.includes('self-pickup')) return true;
     return false;
   }
 
@@ -186,10 +184,10 @@ export class DeliveryService {
       cropUnit: delivery.cropUnit || null as any,
       farmerName: delivery.farmerName || null as any,
       farmerPhone: delivery.farmerPhone || null as any,
-      pickupAddress: delivery.pickupAddress || null as any,
+      pickupAddress: delivery.pickupAddress || 'Farm Gate APMC Pickup Hub',
       dealerName: delivery.dealerName || null as any,
       dealerPhone: delivery.dealerPhone || null as any,
-      dropAddress: delivery.dropAddress || null as any,
+      dropAddress: delivery.dropAddress || 'Mandi Terminal Delivery Point',
       distanceKm: dist,
       deliveryFee: fee,
       fulfillmentType: isSelfPickup ? 'SELF_PICKUP' : (delivery.fulfillmentType || 'DELIVERY_AGENT'),
@@ -214,8 +212,8 @@ export class DeliveryService {
       const payload = {
         orderId: orderNum,
         deliveryAgentId: agentNum,
-        pickupAddress: newDelivery.pickupAddress || null,
-        deliveryAddress: newDelivery.dropAddress || null,
+        pickupAddress: newDelivery.pickupAddress || 'Farm Gate APMC Pickup Hub',
+        deliveryAddress: newDelivery.dropAddress || 'Mandi Terminal Delivery Point',
         distanceKm: dist,
         deliveryFee: fee,
         dealerId: delivery.dealerId ? parseInt(String(delivery.dealerId).replace(/\D/g, ''), 10) : null,
